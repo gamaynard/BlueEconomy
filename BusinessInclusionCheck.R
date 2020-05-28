@@ -369,4 +369,7 @@ writeWorksheet(
 )
 ## Saves the workbook to the corresponding Excel file and write the file to disk
 saveWorkbook(wb)
+<<<<<<< HEAD
+>>>>>>> 3c765f61b69a8bb5161a6193ab7dd14e352412cf
+=======
 >>>>>>> 3c765f61b69a8bb5161a6193ab7dd14e352412cf
