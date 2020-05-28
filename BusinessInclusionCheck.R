@@ -89,7 +89,7 @@ likely=subset(likely,likely[,3]>=90)
 
 ## Write everything out to an Excel workbook with multiple spreadsheets
 wb=loadWorkbook(
-  "/home/george/Documents/Independent_Analytics/BlueEconomy2020/2020 Analysis/Matches.xlsx", 
+  "/home/george/Documents/Independent_Analytics/BlueEconomy2020/2020 Analysis/BUS_Matches.xlsx", 
   create = TRUE
   )
 
@@ -100,7 +100,7 @@ createSheet(
 )
 writeWorksheet(
   wb, 
-  new, 
+  as.data.frame(new), 
   sheet="newBusinesses", 
   startRow=1, 
   startCol=1
@@ -111,7 +111,7 @@ createSheet(
 )
 writeWorksheet(
   wb,
-  gone,
+  as.data.frame(gone),
   sheet="gone",
   startRow=1,
   startCol=1
@@ -122,7 +122,7 @@ createSheet(
 )
 writeWorksheet(
   wb,
-  likely,
+  as.data.frame(likely),
   sheet="LikelyMatches",
   startRow=1,
   startCol=1
@@ -133,7 +133,7 @@ createSheet(
 )
 writeWorksheet(
   wb,
-  matches,
+  as.data.frame(matches),
   sheet="PossibleMatches",
   startRow=1,
   startCol=1
@@ -141,3 +141,85 @@ writeWorksheet(
 ## Saves the workbook to the corresponding Excel file and write the file to disk
 saveWorkbook(wb)
 
+## Read in the non-profit list identified in the previous report
+np2017=read.csv("/home/george/Documents/Independent_Analytics/BlueEconomy2020/2020 Analysis/blue_eo.csv")
+## Subset out only the blue non-profits
+np2017=subset(np2017,np2017$BLUE=="Y")
+## Check to see if those non-profits exist in the 2020 NAICS data or the
+present=subset(np2017,toupper(np2017$NAME)%in%toupper(naics2020$COMPANY))$NAME
+missing=subset(np2017,np2017$NAME%in%present==FALSE)$NAME
+## Use fuzzy matching to check for other potentials following the same procedure as above
+## Create an empty matrix to store all results
+matches=matrix(nrow=length(missing),ncol=7)
+## Create an empty matrix to store most likely results (>90%)
+likely=matrix(nrow=length(missing),ncol=3)
+## For each missing non-profit, find the closest match(es) in the business data
+for(i in 1:length(missing)){
+  matches[i,1]=missing[i]
+  d=stringsim(
+    a=toupper(missing[i]),
+    b=toupper(naics2020$COMPANY)
+  )
+  p=naics2020$COMPANY[which(d==max(d))]
+  if(length(p)<5){
+    matches[i,seq(2,2+length(p)-1,1)]=p
+    matches[i,7]=FALSE
+  } else {
+    matches[i,seq(2,6,1)]=p[1:5]
+    matches[i,7]=TRUE
+  }
+  likely[i,1]=missing[i]
+  if(max(d)>0.9){
+    likely[i,2]=naics2020$COMPANY[which(d==max(d))][1]
+    likely[i,3]=max(d)*100
+  }
+}
+colnames(matches)=c("Missing","PossibleMatch1","PossibleMatch2","PossibleMatch3","PossibleMatch4",
+                    "PossibleMatch5","AdditionalMatchesFound")
+colnames(likely)=c("Missing","PossibleMatch","PercentMatch")
+
+## Likely matches are only those with a 90% or greater match
+likely=subset(likely,likely[,3]>=90)
+
+## Write everything out to an Excel workbook with multiple spreadsheets
+wb=loadWorkbook(
+  "/home/george/Documents/Independent_Analytics/BlueEconomy2020/2020 Analysis/NP_Matches.xlsx", 
+  create = TRUE
+)
+
+## Create a worksheet in the workbook for each result object and write out the results
+createSheet(
+  wb, 
+  name="missingNPs"
+)
+writeWorksheet(
+  wb, 
+  as.data.frame(missing), 
+  sheet="missingNPs", 
+  startRow=1, 
+  startCol=1
+)
+createSheet(
+  wb,
+  name="LikelyMatches"
+)
+writeWorksheet(
+  wb,
+  as.data.frame(likely),
+  sheet="LikelyMatches",
+  startRow=1,
+  startCol=1
+)
+createSheet(
+  wb,
+  name="PossibleMatches"
+)
+writeWorksheet(
+  wb,
+  as.data.frame(matches),
+  sheet="PossibleMatches",
+  startRow=1,
+  startCol=1
+)
+## Saves the workbook to the corresponding Excel file and write the file to disk
+saveWorkbook(wb)
