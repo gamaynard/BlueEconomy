@@ -404,11 +404,13 @@ saveWorkbook(wb)
 
 ## Create a new workbook with NAICS matches between the two data sets
 old_NAICS=select(naics2017,NAICS_C1,NAICS_D1)
+old_NAICS$NAICS_D1=toupper(as.character(old_NAICS$NAICS_D1))
 old_NAICS$dup=duplicated(old_NAICS)
 old_NAICS=subset(old_NAICS,old_NAICS$dup==FALSE)
 old_NAICS$dup=NULL
 
 new_NAICS=select(naics2020,NAICS_C1,NAICS_D1)
+new_NAICS$NAICS_D1=toupper(as.character(new_NAICS$NAICS_D1))
 new_NAICS$dup=duplicated(new_NAICS)
 new_NAICS=subset(new_NAICS,new_NAICS$dup==FALSE)
 new_NAICS$dup=NULL
